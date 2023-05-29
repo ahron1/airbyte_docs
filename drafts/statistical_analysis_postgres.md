@@ -368,11 +368,11 @@ Notice, based on the output of the above three queries, that the percentage of e
 
 Covariance and correlation both measure the degree to which two variables jointly deviate from their respective means. For two groups of variables X and Y with n values each, the covariance is measured as:
 
-(1/n)sum((X_i - avg(X))*(Y_i - avg(Y)))
+$\frac{1}{n}\sum((X_i - avg(X))(Y_i - avg(Y)))$
 
 The correlation (coefficient) is the covariance adjusted by the standard deviations. 
 
-Correlation = Covariance / (stddev(X)*stddev(Y))
+$Correlation = \frac{Covariance}{stddev(X)*stddev(Y)}$
 
 Note that the correlation function is symmetrical, Correlation(X,Y) = Correlation(Y,X).
 
@@ -399,11 +399,13 @@ Compute the correlation between median income and per capita annual deaths. Noti
 
 To be able to predict the values of a dependent variable (Y) based on the value of the independent variable (X), you need an expression that encodes the relation between them. This relation is called the regression equation and it is of the form:
 
-Y_predicted = slope * X + intercept 
+$Y_{predicted} = slope * X + intercept$
+
+$Y_{actual} = slope * X + intercept + error$
 
 In simple regression (Ordinary Least Squares - OLS), the slope is the correlation coefficient (of Y and X) scaled by the ratio of the standard deviations of Y and X:
 
-Slope = Correlation (Y, X) * stddev(Y) / stddev(X)
+$Slope = Correlation(Y,X)*\frac{stddev(Y)}{stddev(X)}$
 
 The intercept is the expected value of Y were X to be 0.
 
