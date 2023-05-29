@@ -78,7 +78,7 @@ Update these columns based on the value of the county and state in the column `g
 Notice that the separator is a comma followed by a space. Check that the above command did what was expected: 
 
     SELECT geography, county, state 
-    FROM cancer_data LIMIT  ;
+    FROM cancer_data LIMIT 5 ;
 
 To enhance readability and usability, create a materialized view based on the original data. In this example, the materialized view is customized as follows: 
 
