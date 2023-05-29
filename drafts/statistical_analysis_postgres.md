@@ -411,7 +411,7 @@ The intercept is the expected value of Y were X to be 0.
 
 Assume, for sake of illustration, that the dependent variable is number of annual cases of cancer, `avg_annual_deaths`, and the independent variable is the number of cases, `avg_annual_cases`. The goal is to be able to express the number of deaths as a function of the number of cases:
 
-Number_Deaths = Slope * Number_Cases + Intercept + Error
+$Number_{Deaths}^{actual} = Slope * Number_{Cases} + Intercept + Error$
 
 The following query returns the value of the slope:
 
@@ -423,9 +423,9 @@ The Intercept is given by:
     SELECT regr_intercept(avg_annual_deaths, avg_annual_cases) 
     FROM mv_cancer_data ;
 
-Thus, the relationship is:
+Thus, based on the output of the above two queries, the relationship is:
 
-Number_Deaths_Predicted = 0.33 * Number_Cases - 16.8 
+$Number_{Deaths}^{predicted} = 0.33 * Number_{Cases} - 16.8 $
 
 ### Errors
 
