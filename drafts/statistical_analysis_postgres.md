@@ -36,7 +36,7 @@ It is advisable to create and use a new database to test the examples. As the `p
 
 Create a new database:
 
-    CREATE DATABASE cancer_d ;
+    CREATE DATABASE cancer_db ;
 
 Connect to the newly created database:
 
@@ -44,20 +44,20 @@ Connect to the newly created database:
 
 Create a new table `cancer_data`: 
 
-    CREATE TABLE cancer_data (avganncount DECIMAL, avgdeathsperyear INTEGER, target_deathrate DECIMAL,incidencerate DECIMAL, medincome INTEGER, popest2015 INTEGER, povertypercent DECIMAL, studypercap DECIMAL, binnedinc VARCHAR, medianage DECIMAL, medianagemale DECIMAL, medianagefemale DECIMAL, geography VARCHAR, percentmarried DECIMAL, pctnohs18_24 DECIMAL, pcths18_24 DECIMAL, pctsomecol18_24 DECIMAL, pctbachdeg18_24 DECIMAL, pcths25_over DECIMAL, pctbachdeg25_over DECIMAL, pctemployed16_over DECIMAL, pctunemployed16_over DECIMAL, pctprivatecoverage DECIMAL, pctprivatecoveragealone DECIMAL, pctempprivcoverage DECIMAL, pctpubliccoverage DECIMAL, pctpubliccoveragealone DECIMAL, pctwhite DECIMAL, pctblack DECIMAL, pctasian DECIMAL, pctotherrace DECIMAL, pctmarriedhouseholds DECIMAL, birthrate DECIMAL ;
+    CREATE TABLE cancer_data (avganncount DECIMAL, avgdeathsperyear INTEGER, target_deathrate DECIMAL,incidencerate DECIMAL, medincome INTEGER, popest2015 INTEGER, povertypercent DECIMAL, studypercap DECIMAL, binnedinc VARCHAR, medianage DECIMAL, medianagemale DECIMAL, medianagefemale DECIMAL, geography VARCHAR, percentmarried DECIMAL, pctnohs18_24 DECIMAL, pcths18_24 DECIMAL, pctsomecol18_24 DECIMAL, pctbachdeg18_24 DECIMAL, pcths25_over DECIMAL, pctbachdeg25_over DECIMAL, pctemployed16_over DECIMAL, pctunemployed16_over DECIMAL, pctprivatecoverage DECIMAL, pctprivatecoveragealone DECIMAL, pctempprivcoverage DECIMAL, pctpubliccoverage DECIMAL, pctpubliccoveragealone DECIMAL, pctwhite DECIMAL, pctblack DECIMAL, pctasian DECIMAL, pctotherrace DECIMAL, pctmarriedhouseholds DECIMAL, birthrate DECIMAL) ;
 
 This table contains columns for each of the fields in the CSV file. The data types of the columns are based on the [data dictionary](https://data.world/exercises/linear-regression-exercise-1/workspace/data-dictionary). It is important to correctly match the column names and data types between the CSV file and the data table. Not doing this leads to errors in importing the data.
 
 Copy the data from the CSV file to the table:
 
     COPY cancer_data 
-    FROM '/path/to/data/file/cancer_reg.csv' DELIMITER ',' CSV HEADE ;
+    FROM '/path/to/data/file/cancer_reg.csv' DELIMITER ',' CSV HEADER ;
     
 In the above command, the file path should be based on the location of the `cancer_reg.csv` file on your system.
 
 Check a couple of rows to get an idea of the data itself:
 
-    SELECT * FROM cancer_data LIMIT  ;
+    SELECT * FROM cancer_data LIMIT 2 ;
 
 ## Data Preprocessing
 
@@ -65,15 +65,15 @@ For most analytical exercises, the original data needs to be modified to make it
 
 Add two new columns, `county` and `state`, to the table `cancer_data`:
 
-    ALTER TABLE cancer_data ADD COLUMN county VARCHA ;
+    ALTER TABLE cancer_data ADD COLUMN county VARCHAR ;
 
-    ALTER TABLE cancer_data ADD COLUMN state VARCHA ;
+    ALTER TABLE cancer_data ADD COLUMN state VARCHAR ;
 
 Update these columns based on the value of the county and state in the column `geography`:
 
     UPDATE cancer_data 
         SET county = SPLIT_PART(geography, ', ', 1), 
-        state = SPLIT_PART(geography, ', ', 2 ;
+        state = SPLIT_PART(geography, ', ', 2) ;
 
 Notice that the separator is a comma followed by a space. Check that the above command did what was expected: 
 
@@ -87,21 +87,23 @@ To enhance readability and usability, create a materialized view based on the or
 1. Additional columns with per capita values of some of the data points, such as the number of `avg_annual_cases` and `avg_annual_deaths`
 1. Additional columns with the county and state names (this change was done to the table itself)
 
+The following query creates the new materialized view, `mv_cancer_data`:
+
     CREATE MATERIALIZED VIEW mv_cancer_data AS 
-        SELECT 
-            avganncount AS avg_annual_cases, 
-            round(avganncount / popest2015, 1) AS percapita_annual_cases, 
-            avgdeathsperyear AS avg_annual_deaths, 
-            round(avgdeathsperyear / popest2015, 1) AS percapita_annual_deaths, 
-            medincome AS median_income, 
-            popest2015 AS population, 
-            povertypercent AS pc_poverty, 
-            medianage AS median_age, 
-            pctemployed16_over AS pc_employed, 
-            pctunemployed16_over AS pc_unemployed, 
-            county, 
-            state 
-        FROM test ;
+    SELECT 
+    avganncount AS avg_annual_cases, 
+    avganncount / popest2015::float AS percapita_annual_cases, 
+    avgdeathsperyear AS avg_annual_deaths, 
+    avgdeathsperyear / popest2015::float  AS percapita_annual_deaths, 
+    medincome AS median_income, 
+    popest2015 AS population, 
+    povertypercent AS pc_poverty, 
+    medianage AS median_age, 
+    pctemployed16_over AS pc_employed, 
+    pctunemployed16_over AS pc_unemployed, 
+    county, 
+    state 
+    FROM cancer_data ;
 
 This materialized view, `mv_cancer_data` will be used in all further examples. Check the columns and data types in the materialized view:
 
@@ -287,9 +289,7 @@ The mean of a sample is the average of all the data points in the sample. The `a
 
 The average of per capita annual deaths across all counties is given by:
 
-    SELECT round(
-        avg(percapita_annual_deaths)
-    ,2) 
+    SELECT avg(percapita_annual_deaths)
     FROM mv_cancer_data ;
 
 ### Variance and Standard Deviation
@@ -300,14 +300,12 @@ A more commonly used metric of dispersion is standard deviation, which is comput
 
 The function `var_samp` returns the sample variance. The variance of per capita deaths across different counties is given by:
 
-    SELECT round(var_samp(percapita_annual_deaths),2) 
+    SELECT var_samp(percapita_annual_deaths)
     FROM mv_cancer_data ;
     
 Sample standard deviation is computed using `stddev_samp`. The standard deviation of per capita annual deaths across counties is given by:
 
-    SELECT round(
-        stddev_samp(percapita_annual_deaths)
-    ,2) 
+    SELECT stddev_samp(percapita_annual_deaths)
     FROM mv_cancer_data ;
 
 Note: the above queries use the sample variance and the sample standard deviation functions. The functions for population variance, `var_pop` and population standard deviation, `stddev_pop`, work similarly. The distinction and relation between sample properties and population properties is beyond the scope of this article.
@@ -316,10 +314,10 @@ Note: the above queries use the sample variance and the sample standard deviatio
 
 The coefficient of variation (CV) is a commonly used metric - it denotes the dispersion of the data relative to the mean. It is measured as the ratio of the standard deviation to the mean. The value of CV is computed explicitly (there is no builtin function for it): 
 
-    SELECT round(
+    SELECT 
         stddev_samp(percapita_annual_deaths) /
         avg(percapita_annual_deaths)
-    ,2) 
+        AS coefficient_of_variation
     FROM mv_cancer_data ;
 
 ### Outliers
@@ -425,7 +423,7 @@ The Intercept is given by:
 
 Thus, the relationship is:
 
-Number_Deaths_Predicted = 0.33 * Number_Cases - 16.7 
+Number_Deaths_Predicted = 0.33 * Number_Cases - 16.8 
 
 ### Errors
 
@@ -436,7 +434,7 @@ The regression equation predicts the value of Y for a given value of X. The diff
 
     SELECT sqrt(
         avg(
-            (avg_annual_deaths - (0.33*avg_annual_cases-16.7))^2
+            (avg_annual_deaths - (0.33*avg_annual_cases-16.8))^2
         )
     ) 
     FROM mv_cancer_data ;
