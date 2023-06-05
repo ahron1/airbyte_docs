@@ -2,7 +2,7 @@
 
 ## Introduction
 
-For any real-life dataset, it is useful to have an awareness of the basic features of the data. Properties like maximum, minimum, sum and average values of a column, percentile cutoff ranges, give an initial understanding for the data. It is also helpful to be able to divide the data into different subgroups and get these values for each subgroup.
+Before analyzing any data, it is useful to have an awareness of the basic features of the dataset. Properties like maximum, minimum, sum, and average values of a column, and percentile cutoff ranges, give an initial understanding of the data. It is also helpful to be able to divide the data into different subgroups and get these values for each subgroup.
 
 This article presents an introduction to preliminary data analysis using PostgreSQL and illustrates how to study the aforementioned properties of the data.
 
@@ -20,17 +20,17 @@ Note: in the examples below, `$` denotes the operating system prompt as a non-ro
 
 ## Example Dataset
 
-PostgreSQL has a number of builtin functions that are useful in analysing data. It is helpful to see these functions in action in the form of SQL queries on an actual dataset. 
+PostgreSQL has several built-in functions that are useful in analyzing data. It is helpful to see these functions in action in the form of SQL queries on an actual dataset. 
 
-This article uses a dataset about cancer statistics. This dataset is based on (U.S) government data and is available publicly (behind a free login-wall) on [data.world](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the author has no affiliation with the website). Kaggle also has a number of datasets freely available.
+This article uses a dataset about cancer statistics. This dataset is based on (U.S) government data and is available publicly (behind a free login wall) on [data.world](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the author has no affiliation with the website). Kaggle also has many datasets freely available.
 
 The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. 
 
-The next two sections show how to import the dataset (as a CSV file) into PostgreSQL and how to preprocess the data before analysing it. You can skip these steps and start directly with the Data Analysis section by using the preprocessed datafile as an SQL dump file. Alternatively, you can use the Docker Image with the data preloaded.
+The next two sections show how to import the dataset (as a CSV file) into PostgreSQL and how to preprocess the data before analyzing it. You can skip these steps and start directly with the Data Analysis section by using the preprocessed data as an SQL dump file. Alternatively, you can use the Docker Image with the data preloaded.
 
 ### Import the Data File into the Database
 
-The dataset used in this article shows the annual average of the number of diagnosed cancer cases and cancer related deaths per county (US). Besides this, it includes basic demographic (age, income, education, employment, unemployment, etc.) data per county. A description of all the columns in the dataset is available on the [data dictionary page](https://data.world/exercises/linear-regression-exercise-1/workspace/data-dictionary). 
+The dataset used in this article shows the annual average of the number of diagnosed cancer cases and cancer-related deaths per county (US). Besides this, it includes basic demographic (age, income, education, employment, unemployment, etc.) data per county. A description of all the columns in the dataset is available on the [data dictionary page](https://data.world/exercises/linear-regression-exercise-1/workspace/data-dictionary). 
 
 Download the CSV file containing the data from the [webpage of the dataset](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the page has download buttons). For this particular dataset, the data file is `cancer_reg.csv`. 
 
@@ -63,7 +63,7 @@ Check a couple of rows to get an idea of the data itself:
 
 ### Data Preprocessing
 
-For most analytical exercises, the original data needs to be modified to make it more amenable to analysis. In the `cancer_data` table, the column `geography` contains string values of the form *county, state*. There is no column for individual states. Writing SQL queries based on a portion of a string value is not the right approach. It is easier to have dedicated columns with the county and state values.
+For most analytical exercises, the original data needs to be modified to make it more amenable to analysis. In the `cancer_data` table, the column `geography` contains string values of the form *county, state*. There is no column for individual states. Writing SQL queries based on a portion of a string value is not the right approach. It is easier to have dedicated columns for county and state names.
 
 Add two new columns, `county` and `state`, to the table `cancer_data`:
 
@@ -84,7 +84,7 @@ Notice that the separator is a comma followed by a space. Check that the above c
 
 To enhance readability and usability, create a materialized view based on the original data. In this example, the materialized view is customized as follows: 
 
-1. Only a few selected columns that are used in the analysis
+1. It contains only those columns which are used in the analysis
 1. Many of the columns are renamed for better readability
 1. Additional columns with per capita values of some of the data points, such as the number of `avg_annual_cases` and `avg_annual_deaths`
 1. Additional columns with the county and state names (this change was done to the table itself)
@@ -118,7 +118,7 @@ Below is a description of the columns in `mv_cancer_data`.
 * `avg_annual_deaths` - Mean number of reported mortalities due to cancer in the county
 * `percapita_annual_deaths` - Number of cancer deaths in the county divided by county population
 * `median_income` - Median income per county
-* `population` - Population of county
+* `population` - Population of the county
 * `pc_poverty` - Percent of county populace in poverty
 * `median_age` - Median age of county residents 
 * `county` - County name
@@ -130,7 +130,7 @@ Note that percentages of unemployed and employed people do not add up to 100%. T
 
 ## Data Analysis
 
-This section shows ways to do an exploratory analysis of the data itself - this helps in getting a "feel" of the data before digging deeper. Functions used in this section, such as `sum` or `avg` (average), compute their output based on the value of a number of rows. Such functions are called *aggregate functions*.
+This section shows ways to do an exploratory analysis of the data itself - this helps in getting a "feel" of the data before digging deeper. Functions used in this section, such as `sum` or `avg` (average), compute their output based on the value of multiple rows. Such functions are called *aggregate functions*.
 
 Aggregate functions do their computation over the rows that match the conditions in the `WHERE` clause. In the absence of a `WHERE` clause, the function is applied over all the rows.
 
@@ -140,7 +140,7 @@ Note that the queries in this section are based on the materialized view, `mv_ca
 
     SELECT count(*) FROM mv_cancer_data ;
 
-The above query returns the total number of rows in the table `cancer_data`. To get the number of entries for Alabama, count the number rows where the `state` column has the value `Alabama`:
+The above query returns the total number of rows in the table `cancer_data`. To get the number of entries for Alabama, count the number of rows where the `state` column has the value `Alabama`:
 
     SELECT count(*) FROM mv_cancer_data 
     WHERE state = 'Alabama' ;
@@ -204,11 +204,11 @@ To compute the average number of annual cases (per capita) of cancer in counties
     FROM mv_cancer_data 
     WHERE median_income < 50000 ;
 
-Observe, based on the outputs of the above two queries, that the average number of diagnosed cases per capita is higher in higher income counties. 
+Observe, based on the outputs of the above two queries, that the average number of diagnosed cases per capita is higher in higher-income counties. 
 
 #### Exercise
 
-Modify the above two queries to compute the average number of deaths per capita and observe that there are fewer deaths in counties with higher income. The higher number of diagnoses combined with lower number of deaths can, at least superficially, be attributed to improved testing as well as treatment facilities in higher income regions.
+Modify the above two queries to compute the average number of deaths per capita and observe that there are fewer deaths in counties with higher income. The higher number of diagnoses combined with the lower number of deaths can, at least superficially, be attributed to improved testing as well as treatment facilities in higher-income regions.
 
 ### Percentiles
 
@@ -286,7 +286,7 @@ Grouping functions reduce the number of rows in the input data by applying an ag
 
 ## Conclusion
 
-This article showed how to do preliminary data analysis using PostgreSQL. Many of the builtin functions used for data analysis are listed under **Aggregate Functions** in the [official PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-aggregate.html). The documentation also lists a few more functions than discussed here. The official tutorials on [aggregate functions](https://www.postgresql.org/docs/current/tutorial-agg.html) and [window functions](https://www.postgresql.org/docs/current/tutorial-window.html) are also helpful for a better understanding of these functions.
+This article showed how to do preliminary data analysis using PostgreSQL. Many of the built-in functions used for data analysis are listed under **Aggregate Functions** in the [official PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-aggregate.html). The documentation also lists a few more functions than discussed here. The official tutorials on [aggregate functions](https://www.postgresql.org/docs/current/tutorial-agg.html) and [window functions](https://www.postgresql.org/docs/current/tutorial-window.html) are also helpful for a better understanding of these functions.
 
 ### Learn More
 
