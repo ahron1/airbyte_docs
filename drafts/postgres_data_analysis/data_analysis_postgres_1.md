@@ -14,7 +14,7 @@ It is assumed you have prior practical exposure to the PostgreSQL database. It i
 
 ### Systems
 
-The commands in this article are tested on PostgreSQL 14.5. SQL queries should work on all recent versions of PostgreSQL.
+The commands in this article are tested on PostgreSQL 14.5. SQL queries should work on all recent versions of PostgreSQL. If you choose to use the included Docker image, your computer needs to have Docker as well as a PostgreSQL client. 
 
 Note: in the examples below, `$` denotes the operating system prompt as a non-root user. Code snippets without a prompt are SQL statements.
 
@@ -24,13 +24,55 @@ PostgreSQL has several built-in functions that are useful in analyzing data. It 
 
 This article uses a dataset about cancer statistics. This dataset is based on (U.S) government data and is available publicly (behind a free login wall) on [data.world](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the author has no affiliation with the website). Kaggle also has many datasets freely available.
 
-The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. 
+The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. You have two ways to get the data - 1) download a database dump file or docker image with the preprocessed data, and 2) start from the raw CSV file and process it yourself.
 
-The next two sections show how to import the dataset (as a CSV file) into PostgreSQL and how to preprocess the data before analyzing it. You can skip these steps and start directly with the Data Analysis section by using the preprocessed data as an SQL dump file. Alternatively, you can use the Docker Image with the data preloaded.
+### Get the Data - Option 1
 
-### Import the Data File into the Database
+You can get the preprocessed data as an SQL dump file and import it into PostgreSQL. You can also download and run a docker image containing PostgreSQL with the database preloaded.
 
-The dataset used in this article shows the annual average of the number of diagnosed cancer cases and cancer-related deaths per county (US). Besides this, it includes basic demographic (age, income, education, employment, unemployment, etc.) data per county. A description of all the columns in the dataset is available on the [data dictionary page](https://data.world/exercises/linear-regression-exercise-1/workspace/data-dictionary). 
+#### Choice 1 - Database Dump File
+
+[Download the database dump file](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/cancer_db_dump.sql) - this is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
+
+Before importing the dump file, create a new database:
+    
+    CREATE DATABASE cancer_db ;
+
+As the `postgres` user, import the dump into the newly created database:
+
+    $ psql cancer_db < /path/to/dump_file/cancer_db_dump.sql
+
+You can now jump to the Data Analysis section.
+
+#### Choice 2 - Docker Image
+
+Alternatively, you can use the Docker Image with the data preloaded. If your computer does not have PostgreSQL installed, you can install just the client (to connect to the database running on Docker). On Debian/Ubuntu based systems, the PostgreSQL client can be installed as: 
+
+    $ apt install postgresql-client
+
+Pull the docker image:
+
+    $ docker pull ahron1/postgres-data-analysis:latest
+
+Check that the new image is now part of your system:
+
+    $ docker images 
+
+Run the new image:
+
+    $ docker run -p 5432:5432 ahron1/postgres-data-analysis & 
+
+Connect to the running database instance with username and password `postgres`: 
+
+    $ psql -h 0.0.0.0 -p 5432 -U postgres cancer_db
+
+You can now jump to the Data Analysis section to continue further.
+
+### Get the Data - Option 2
+
+Instead of using either the Docker image or the database dump, you can also prepare the dataset manually, starting from the raw CSV file. The next two subsections show how to import the dataset (as a CSV file) into PostgreSQL and how to preprocess the data before analyzing it. 
+
+#### Import the Data File into the Database
 
 Download the CSV file containing the data from the [webpage of the dataset](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the page has download buttons). For this particular dataset, the data file is `cancer_reg.csv`. 
 
@@ -61,7 +103,7 @@ Check a couple of rows to get an idea of the data itself:
 
     SELECT * FROM cancer_data LIMIT 2 ;
 
-### Data Preprocessing
+#### Data Preprocessing
 
 For most analytical exercises, the original data needs to be modified to make it more amenable to analysis. In the `cancer_data` table, the column `geography` contains string values of the form *county, state*. There is no column for individual states. Writing SQL queries based on a portion of a string value is not the right approach. It is easier to have dedicated columns for county and state names.
 
@@ -89,7 +131,7 @@ To enhance readability and usability, create a materialized view based on the or
 1. Additional columns with per capita values of some of the data points, such as the number of `avg_annual_cases` and `avg_annual_deaths`
 1. Additional columns with the county and state names (this change was done to the table itself)
 
-The following query creates the new materialized view, `mv_cancer_data`:
+The following query creates the new materialized view, `mv_cancer_data`, which will be used for subsequent analyses:
 
     CREATE MATERIALIZED VIEW mv_cancer_data AS 
     SELECT 
@@ -107,7 +149,13 @@ The following query creates the new materialized view, `mv_cancer_data`:
     state 
     FROM cancer_data ;
 
-This materialized view, `mv_cancer_data` will be used in all further examples. Check the columns and data types in the materialized view:
+## Data Analysis
+
+This section shows ways to do an exploratory analysis of the data itself - this helps in getting a "feel" of the data before digging deeper. Note that the queries in this section are based on the materialized view, `mv_cancer_data`, which contains the preprocessed dataset.
+
+### Data Description
+
+The materialized view, `mv_cancer_data` will be used in all further examples. Check the columns and data types in the materialized view:
 
     \d mv_cancer_data
 
@@ -128,15 +176,15 @@ Below is a description of the columns in `mv_cancer_data`.
 
 Note that percentages of unemployed and employed people do not add up to 100%. The difference is attributed to people who have quit looking for work, are not looking for work, are unable to work, or otherwise are not in the labor force. 
 
-## Data Analysis
+Take a look at the form of the data:
+    
+    SELECT * FROM mv_cancer_data LIMIT 2;
 
-This section shows ways to do an exploratory analysis of the data itself - this helps in getting a "feel" of the data before digging deeper. Functions used in this section, such as `sum` or `avg` (average), compute their output based on the value of multiple rows. Such functions are called *aggregate functions*.
+### Aggregate Functions
 
-Aggregate functions do their computation over the rows that match the conditions in the `WHERE` clause. In the absence of a `WHERE` clause, the function is applied over all the rows.
+Functions used in this section, such as `sum` or `avg` (average), compute their output based on the value of multiple rows. Such functions are called *aggregate functions*. Aggregate functions do their computation over the rows that match the conditions in the `WHERE` clause. In the absence of a `WHERE` clause, the function is applied over all the rows.
 
-Note that the queries in this section are based on the materialized view, `mv_cancer_data`, which contains the preprocessed dataset.
-
-### Count the Number of Rows
+#### Count the Number of Rows
 
     SELECT count(*) FROM mv_cancer_data ;
 
@@ -145,7 +193,7 @@ The above query returns the total number of rows in the table `cancer_data`. To 
     SELECT count(*) FROM mv_cancer_data 
     WHERE state = 'Alabama' ;
  
-### Maximum and Minimum Values of a Column
+#### Maximum and Minimum Values of a Column
 
 To get the maximum and minimum values in a column, use the `max` and `min` functions respectively.
 
@@ -158,7 +206,7 @@ The above query returns the minimum number of annual deaths in any county. Get t
     FROM mv_cancer_data 
     WHERE state = 'Alabama' ;
 
-### Using Aggregate Functions in the `WHERE` clause
+#### Using Aggregate Functions in the `WHERE` clause
 
 In the previous queries, suppose you also want to get all the other details (columns) of the county which had the maximum number of annual deaths. 
 
@@ -172,7 +220,7 @@ The above query is wrong. It is not allowed to have aggregate functions as part 
         (SELECT MAX(avg_annual_deaths) 
         FROM mv_cancer_data) ;
 
-### Sum of the Values of a Column
+#### Sum of the Values of a Column
 
 `sum` adds up the values of a column. To get the total number of annual cancer deaths throughout the country, apply the `sum` function over all the values in the column `avg_annual_deaths`. To get the total number of annual deaths throughout the country (across all counties):
 
@@ -185,7 +233,7 @@ To get the total number of annual deaths for a specific state, California:
     FROM mv_cancer_data 
     WHERE state = 'California' ;
 
-### Average Value of a Column
+#### Average Value of a Column
 
 The `avg` function averages the (non-null) values of a column. The following query computes the average number of annual cases (per capita) of cancer across all US counties:
 
@@ -206,11 +254,11 @@ To compute the average number of annual cases (per capita) of cancer in counties
 
 Observe, based on the outputs of the above two queries, that the average number of diagnosed cases per capita is higher in higher-income counties. 
 
-#### Exercise
+##### Exercise
 
 Modify the above two queries to compute the average number of deaths per capita and observe that there are fewer deaths in counties with higher income. The higher number of diagnoses combined with the lower number of deaths can, at least superficially, be attributed to improved testing as well as treatment facilities in higher-income regions.
 
-### Percentiles
+#### Percentiles
 
 The `percentile_cont(N)` function computes the value of the *Nth* percentile. The following query gives the 95th percentile of the per capita number of annual deaths across all counties:
 
@@ -239,9 +287,9 @@ The bottom 1% consists of values that are below the 1st percentile:
             (ORDER BY percapita_annual_deaths) 
         FROM mv_cancer_data) ;
 
-## Grouping and Partitioning
+### Grouping and Partitioning
 
-### Grouping
+#### Grouping
 
 One of the goals of analytical exercises is to group the data into different classes to study and compare specific properties of each class. The *grouping operations* in PostgreSQL are often used to achieve this.
 
@@ -266,7 +314,7 @@ Add a sorting (ordering) clause in the above query:
     GROUP BY state 
     ORDER BY total_annual_deaths ;
 
-### Partitioning and Window Functions
+#### Partitioning and Window Functions
 
 Now consider that for each county, you need to show the total number of cancer cases for the state, and the percentage of state-wide cancer cases accounted for by that county. This is not achievable with the grouping functions shown earlier. You need to use *partitioning* to do this:
 
