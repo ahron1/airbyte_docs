@@ -42,15 +42,19 @@ As the `postgres` user, import the dump into the newly created database:
 
     $ psql cancer_db < /path/to/dump_file/cancer_db_dump.sql
 
+Log in as the `postgres` user and connect to the new database:
+
+    \c cancer_db
+
 You can now jump to the Data Analysis section.
 
 #### Choice 2 - Docker Image
 
-Alternatively, you can use the Docker Image with the data preloaded. If your computer does not have PostgreSQL installed, you can install just the client (to connect to the database running on Docker). On Debian/Ubuntu based systems, the PostgreSQL client can be installed as: 
+Alternatively, you can use the Docker image with the data preloaded. If your computer does not have PostgreSQL installed, you can install just the client (to connect to the database running on Docker). On Debian/Ubuntu based systems, the PostgreSQL client can be installed as: 
 
     $ apt install postgresql-client
 
-Pull the docker image:
+Pull the Docker image:
 
     $ docker pull ahron1/postgres-data-analysis:latest
 

@@ -2,9 +2,9 @@
 
 ## Introduction
 
-This is the second part of the article on data analysis using PostgreSQL. The first part of this article discusses how to study the preliminary properties of the data. It demonstrated SQL queries to get basic features like maximum and minimum values, sums and averages, percentile values, etc. for entire columns as well as for subsets (subgroups) of columns.
+This is the second part of the article on data analysis using PostgreSQL. The [first part](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/data_analysis_postgres_1.md) discusses how to study the preliminary properties of the data. It demonstrated SQL queries to get basic features like maximum and minimum values, sums and averages, percentile values, etc. for entire columns as well as for subsets (subgroups) of columns.
 
-The next logical step in analyzing the data is studying its statistical properties, such as variances, standard deviations, and correlations, as well as linear regressions. Basic statistical analysis does not require the use of specialized tools. It can be run directly within PostgreSQL using built-in functions. Doing the analysis within the database has a few advantages:
+The next logical step in analyzing the data is studying its statistical properties, such as variances, standard deviations, and correlations, as well as linear regressions. That is the topic of this article. Basic statistical analysis does not require the use of specialized tools. It can be run directly within PostgreSQL using built-in functions. Doing the analysis within the database has a few advantages:
 
 1. fewer IT systems to manage and maintain
 1. avoiding passing data back and forth between different systems
@@ -14,19 +14,88 @@ The next logical step in analyzing the data is studying its statistical properti
 
 ### Background 
 
-In addition to hands-on experience with the PostgreSQL database, it is helpful to have a working knowledge of basic statistical analysis. It is also assumed you are comfortable with the material discussed in the first part of this article.
+In addition to hands-on experience with the PostgreSQL database, it is helpful to have a working knowledge of basic statistical analysis. It is also assumed you are comfortable with the material discussed in [the first part of this article](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/data_analysis_postgres_1.md).
 
 ### Systems
 
 The commands in this article are tested on PostgreSQL 14.5 and should work on all recent versions of PostgreSQL.
 
-### Example Dataset
+## Example Dataset
 
 To demonstrate basic statistical analysis, this article uses examples based on a dataset on cancer statistics. It is strongly recommended to try out the examples while reading through the article. 
 
-The first part of the article discusses in detail how to get the data into PostgreSQL and preprocess it. It starts from a CSV file and imports it into a table in a new database. Preprocessing is done on this table and the dataset for analysis is presented as a materialized view. This materialized view, `mv_cancer_data`, is used in all the examples in this article.  It is necessary to follow the steps in the Example Dataset section of the previous article and prepare `mv_cancer_data`. 
+### Get the Data
 
-Alternatively, you can download the SQL dump file containing all the data. You can also use the Docker image and get started directly.
+As discussed in the first part of the article, you have 3 ways of getting the sample data into PostgreSQL and preprocessing it.
+
+#### Option 1
+
+[Download the database dump file](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/cancer_db_dump.sql) - this is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
+
+Before importing the dump file, create a new database:
+    
+    CREATE DATABASE cancer_db ;
+
+As the `postgres` user, import the dump into the newly created database:
+
+    $ psql cancer_db < /path/to/dump_file/cancer_db_dump.sql
+
+Log in as the `postgres` user and connect to the new database:
+
+    \c cancer_db
+
+#### Option 2
+
+Alternatively, you can use the Docker image with the data preloaded. If your computer does not have PostgreSQL installed, you can install just the client (to connect to the database running on Docker). On Debian/Ubuntu based systems, the PostgreSQL client can be installed as: 
+
+    $ apt install postgresql-client
+
+Pull the Docker image:
+
+    $ docker pull ahron1/postgres-data-analysis:latest
+
+Check that the new image is now part of your system:
+
+    $ docker images 
+
+Run the new image:
+
+    $ docker run -p 5432:5432 ahron1/postgres-data-analysis & 
+
+Connect to the running database instance with username and password `postgres`: 
+
+    $ psql -h 0.0.0.0 -p 5432 -U postgres cancer_db
+
+#### Option 3
+
+Follow the instructions in Part I. It starts from the raw CSV file and imports it into a table in a new database. Preprocessing is done on this table and the dataset for analysis is presented as a materialized view. This materialized view, `mv_cancer_data`, is used in all the examples in this article. 
+
+### Data Description
+
+The materialized view, `mv_cancer_data` will be used in all further examples. After connecting to the `cancer_db` database, check the columns and data types in the materialized view:
+
+    \d mv_cancer_data
+
+Below is a description of the columns in `mv_cancer_data`.
+
+* `avg_annual_cases` - Mean number of reported cases of cancer diagnosed annually in the county
+* `percapita_annual_cases` - Number of reported cases in the county divided by county population
+* `avg_annual_deaths` - Mean number of reported mortalities due to cancer in the county
+* `percapita_annual_deaths` - Number of cancer deaths in the county divided by county population
+* `median_income` - Median income per county
+* `population` - Population of the county
+* `pc_poverty` - Percent of county populace in poverty
+* `median_age` - Median age of county residents 
+* `county` - County name
+* `state` - State name
+* `pc_employed` - Percent of county residents ages 16 and over who are employed
+* `pc_unemployed` - Percent of county residents ages 16 and over who are unemployed
+
+Note that percentages of unemployed and employed people do not add up to 100%. The difference is attributed to people who have quit looking for work, are not looking for work, are unable to work, or otherwise are not in the labor force. 
+
+Take a look at the form of the data:
+    
+    SELECT * FROM mv_cancer_data LIMIT 2;
 
 ## Statistical Properties of a Single Variable
 
@@ -214,7 +283,7 @@ Note that the higher the correlation coefficient between X and Y, the lower the 
 
 Knowledge of SQL and basic statistics is a valuable tool for the data analyst. It eliminates the need to rely on dedicated software packages to perform preliminary statistical analysis using PostgreSQL.
 
-The built-in functions used for data analysis are listed under **Aggregate Functions** in the [official PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-aggregate.html). 
+The built-in functions used in this article are listed under **Aggregate Functions** in the [official PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-aggregate.html). 
 
 ### Learn More
 
