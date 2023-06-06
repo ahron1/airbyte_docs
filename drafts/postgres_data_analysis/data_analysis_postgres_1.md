@@ -24,13 +24,9 @@ PostgreSQL has several built-in functions that are useful in analyzing data. It 
 
 This article uses a dataset about cancer statistics. This dataset is based on (U.S) government data and is available publicly (behind a free login wall) on [data.world](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the author has no affiliation with the website). Kaggle also has many datasets freely available.
 
-The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. You have two ways to get the data - 1) download a database dump file or docker image with the preprocessed data, and 2) start from the raw CSV file and process it yourself.
+The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. You have three ways to get the data - 1) download a database dump file with the preprocessed data, 2) use a docker image with PostgreSQL loaded with the preprocessed data, and 3) start from the raw CSV file and process it yourself.
 
-### Get the Data - Option 1
-
-You can get the preprocessed data as an SQL dump file and import it into PostgreSQL. You can also download and run a docker image containing PostgreSQL with the database preloaded.
-
-#### Choice 1 - Database Dump File
+### Option 1
 
 [Download the database dump file](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/cancer_db_dump.sql) - this is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
 
@@ -48,7 +44,7 @@ Log in as the `postgres` user and connect to the new database:
 
 You can now jump to the Data Analysis section.
 
-#### Choice 2 - Docker Image
+### Option 2
 
 Alternatively, you can use the Docker image with the data preloaded. If your computer does not have PostgreSQL installed, you can install just the client (to connect to the database running on Docker). On Debian/Ubuntu based systems, the PostgreSQL client can be installed as: 
 
@@ -72,7 +68,7 @@ Connect to the running database instance with username and password `postgres`:
 
 You can now jump to the Data Analysis section to continue further.
 
-### Get the Data - Option 2
+### Option 3
 
 Instead of using either the Docker image or the database dump, you can also prepare the dataset manually, starting from the raw CSV file. The next two subsections show how to import the dataset (as a CSV file) into PostgreSQL and how to preprocess the data before analyzing it. 
 
