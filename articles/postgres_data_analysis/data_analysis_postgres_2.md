@@ -2,13 +2,15 @@
 
 ## Introduction
 
-This is the second part of the article on data analysis using PostgreSQL. The [first part](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/data_analysis_postgres_1.md) discusses how to study the preliminary properties of the data. It demonstrated SQL queries to get basic features like maximum and minimum values, sums and averages, percentile values, etc. for entire columns as well as for subsets (subgroups) of columns.
+An important part of analyzing any dataset is studying its statistical properties. The standard deviation of a data series and the correlation between different data series give valuable insights into the nature of the data, its interrelatedness, and the underlying information. Basic statistical analysis of this type does not require the use of specialized software packages. It can be done directly within PostgreSQL using built-in functions. This article shows how.
 
-The next logical step in analyzing the data is studying its statistical properties, such as variances, standard deviations, and correlations, as well as linear regressions. That is the topic of this article. Basic statistical analysis does not require the use of specialized tools. It can be run directly within PostgreSQL using built-in functions. Doing the analysis within the database has a few advantages:
+Running the analyses within the database has a few advantages:
 
 1. fewer IT systems to manage and maintain
 1. avoiding passing data back and forth between different systems
 1. leveraging a mature RDBMS for enforcing data integrity and consistency
+
+Note that this is the second part of the article on data analysis using PostgreSQL. The [first part](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/data_analysis_postgres_1.md) discusses how to study the preliminary properties of the data. It demonstrated SQL queries to get basic features like maximum and minimum values, sums and averages, percentile values, etc. for entire columns as well as for subsets (subgroups) of columns.
 
 ## Prerequisites
 
@@ -30,7 +32,11 @@ As discussed in the first part of the article, you have 3 ways of getting the sa
 
 #### Option 1
 
-[Download the database dump file](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/cancer_db_dump.sql) - this is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
+[Download the database dump file](https://raw.githubusercontent.com/ahron1/airbyte_docs/main/drafts/postgres_data_analysis/cancer_db_dump.sql):
+    
+    $ wget https://raw.githubusercontent.com/ahron1/airbyte_docs/main/drafts/postgres_data_analysis/cancer_db_dump.sql
+
+This is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
 
 Before importing the dump file, create a new database:
     
@@ -60,11 +66,11 @@ Check that the new image is now part of your system:
 
 Run the new image:
 
-    $ docker run -p 5432:5432 ahron1/postgres-data-analysis & 
+    $ docker run -p 5434:5432 ahron1/postgres-data-analysis & 
 
 Connect to the running database instance with username and password `postgres`: 
 
-    $ psql -h 0.0.0.0 -p 5432 -U postgres cancer_db
+    $ psql -h 0.0.0.0 -p 5434 -U postgres cancer_db
 
 #### Option 3
 
@@ -186,7 +192,7 @@ The presence of outliers skews statistical properties (like averages and correla
 
 Covariance and correlation both measure the degree to which two variables jointly deviate from their respective means. For two groups of variables X and Y with n values each, the covariance is measured as:
 
-$\frac{1}{n}\sum((X_i - avg(X))(Y_i - avg(Y)))$
+$Covariance = \frac{1}{n}\sum((X_i - avg(X))(Y_i - avg(Y)))$
 
 The correlation (coefficient) is the covariance adjusted by the standard deviations. 
 

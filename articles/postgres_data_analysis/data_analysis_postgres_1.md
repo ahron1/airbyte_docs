@@ -14,7 +14,7 @@ It is assumed you have prior practical exposure to the PostgreSQL database. It i
 
 ### Systems
 
-The commands in this article are tested on PostgreSQL 14.5. SQL queries should work on all recent versions of PostgreSQL. If you choose to use the included Docker image, your computer needs to have Docker as well as a PostgreSQL client. 
+The commands in this article are tested on PostgreSQL 14.5. SQL queries should work on all recent versions of PostgreSQL. If you choose to use the included Docker image, your computer needs to have Docker as well as a PostgreSQL client (such as Postico for the Mac or Beekeeper Studio as a cross-platform solution).
 
 Note: in the examples below, `$` denotes the operating system prompt as a non-root user. Code snippets without a prompt are SQL statements.
 
@@ -24,11 +24,24 @@ PostgreSQL has several built-in functions that are useful in analyzing data. It 
 
 This article uses a dataset about cancer statistics. This dataset is based on (U.S) government data and is available publicly (behind a free login wall) on [data.world](https://data.world/exercises/linear-regression-exercise-1/workspace/file?filename=cancer_reg.csv) (the author has no affiliation with the website). Kaggle also has many datasets freely available.
 
-The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. You have three ways to get the data - 1) download a database dump file with the preprocessed data, 2) use a docker image with PostgreSQL loaded with the preprocessed data, and 3) start from the raw CSV file and process it yourself.
+The examples in this article are presented as hypothetical analyses performed on this dataset. It is strongly recommended to try out the examples while reading through the article. You have three ways to get the data: 
+
+1. Download a database dump file with the preprocessed data
+    Choose this option if you are a regular PostgreSQL user who is comfortable (or wants to practice) importing database dumps. 
+
+1. Use a docker image with PostgreSQL loaded with the preprocessed data, and 
+    This is the fastest way for Docker users. Just run the Docker image and you are good to go. 
+
+1. Start from the raw CSV file and process it yourself.
+    Choose this option to spend some time and gain hands-on experience working on a raw dataset and making it analysis-ready. This is a useful exercise if you are expecting to do analytical work yourself. 
 
 ### Option 1
 
-[Download the database dump file](https://github.com/ahron1/airbyte_docs/blob/main/drafts/postgres_data_analysis/cancer_db_dump.sql) - this is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
+[Download the database dump file](https://raw.githubusercontent.com/ahron1/airbyte_docs/main/drafts/postgres_data_analysis/cancer_db_dump.sql):
+    
+    $ wget https://raw.githubusercontent.com/ahron1/airbyte_docs/main/drafts/postgres_data_analysis/cancer_db_dump.sql
+
+This is essentially a series of SQL commands to recreate the database. Move the dump file to a location the `postgres` user has access to.
 
 Before importing the dump file, create a new database:
     
@@ -60,11 +73,11 @@ Check that the new image is now part of your system:
 
 Run the new image:
 
-    $ docker run -p 5432:5432 ahron1/postgres-data-analysis & 
+    $ docker run -p 5434:5432 ahron1/postgres-data-analysis & 
 
 Connect to the running database instance with username and password `postgres`: 
 
-    $ psql -h 0.0.0.0 -p 5432 -U postgres cancer_db
+    $ psql -h 0.0.0.0 -p 5434 -U postgres cancer_db
 
 You can now jump to the Data Analysis section to continue further.
 
