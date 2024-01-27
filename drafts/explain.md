@@ -2,24 +2,57 @@ In general the commands in this article are based on the PSQL command-line.
 
 ## Sample Data
 
-Download the [one year flight data](https://edu.postgrespro.com/demo-big-en.zip) database from the [PostgresPro page](https://postgrespro.com/community/demodb). 
+Download the [3-months flight data](https://edu.postgrespro.com/demo-medium-en.zip) database from the [PostgresPro page](https://postgrespro.com/community/demodb). 
 
-    $ wget https://edu.postgrespro.com/demo-big-en.zip
+    $ wget https://edu.postgrespro.com/demo-medium-en.zip
 
 Extract the zip file:
 
-    $ unzip demo-big-en.zip
+    $ unzip demo-medium-en.zip
 
-It extracts a file "demo-big-en-20170815.sql". Import this file into PostgreSQL. 
+It extracts a file "demo-medium-en-20170815.sql". This file is a script to create a new database and populate it. It creates a new database "demo". Ensure you do not currently have any useful data in a database with the name "demo" - it will be dropped. 
 
-In the PSQL terminal (or using your favorite GUI), create a new database:
-    
-    CREATE DATABASE airlines;
+In the Linux command-line, import the SQL script file into Postgres:
 
-As the 'postgres' user, in the Linux command-line, import the dump file into this database:
+    $ psql -f demo-medium-en-20170815.sql -U postgres
 
-    psql airlines < demo-big-en-20170815.sql 
+It is a large dump file, around 250 MB in size (after extracting). Running the script to populate the database can take some time - a minute, or more. Check the database's [schema diagram](https://postgrespro.com/docs/postgrespro/10/apjs02) and read the [description of the tables and other objects](https://postgrespro.com/docs/postgrespro/10/apjs04).
 
-It is a large dump file, around 900 MB in size (after extracting). Restoring the dump into the database can take some time - a minute, or more. 
+## Examples
+
+### Index Scans
+
+This example shows how to use EXPLAIN to analyze the performance of a simple index. Run an query on the 'total_amount' column of the 'bookings' table. 
+
+#### Check current indexes
+
+Before running the query, check the current list of indexes and ensure there are no indexes on the column 'total_amount'.
+
+In the PSQL command line, type:
+
+    \d bookings
+
+You can also use the command:
+
+    select * from pg_indexes where tablename = 'bookings'
+
+Run the EXPLAIN query 
+
+    explain (analyze, buffers) select * from bookings where total_amount < 4000
+
+It has a total cost of around and the query takes around __ ms to execute. 
+
+Create a default index on the 'total_amount' column:
+
+    create index bookings_amount on bookings(total_amount)
+
+Re-run the same EXPLAIN query as before. 
+
+### Index Only Scans
+
+    explain (analyze, buffers) select total_amount from bookings where total_amount < 4000
+
+It does an index-only scan. ___
+
 
 
