@@ -1,3 +1,7 @@
+## How it works 
+
+PostgreSQL has internal statistics about tables and data - rows, types of values and some info about (statistical) distribution of the data. Mostly based on random sampling. 
+
 In general the commands in this article are based on the PSQL command-line.
 
 ## Sample Data
@@ -56,3 +60,30 @@ It does an index-only scan. ___
 
 
 
+### HashAggregate 
+
+    https://www.depesz.com/2013/05/09/explaining-the-unexplainable-part-3/
+
+Try to make CTEs
+
+Change order of more/less selective parts of the query
+
+
+### Misc
+
+    (select .. where ..) join (select .. where ..)
+
+    -- change order 
+    
+
+left join - change order
+
+not in instead of outer join
+
+    https://www.quora.com/What-are-2-simple-use-cases-for-left-right-inner-and-outer-SQL-joins 
+
+Disable seq scan to force index usage.
+Delete fk to insert random rows - 
+show diff bw left and inner join using indices
+
+otherwise both get the same plan - seq scan. 
